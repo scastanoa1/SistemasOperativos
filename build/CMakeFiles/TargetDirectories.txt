@@ -1,0 +1,3 @@
+/home/scastano/SistemasOperativos/procplanner/SistemasOperativos/build/CMakeFiles/procplanner.dir
+/home/scastano/SistemasOperativos/procplanner/SistemasOperativos/build/CMakeFiles/edit_cache.dir
+/home/scastano/SistemasOperativos/procplanner/SistemasOperativos/build/CMakeFiles/rebuild_cache.dir

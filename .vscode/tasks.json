@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar archivo C++",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-std=c++17",                // Estándar C++17
+        "-g",                        // Incluye símbolos de depuración
+        "${file}",                   // Archivo abierto
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"  // Ejecutable en la misma carpeta
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]     // Identifica errores de compilación
+    }
+  ]
+}
