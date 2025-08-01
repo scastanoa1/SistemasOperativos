@@ -1,5 +1,19 @@
+#include "CargaProcesos.h"
+#include "Planificador.h"
 #include <iostream>
-int main() {
-    std::cout << "¡Proyecto ProcPlanner iniciado con éxito!\n";
+#include <vector>
+
+int main(int argc, char* argv[]) {
+    std::vector<Proceso> procesos;
+
+    if (argc == 2) {
+        procesos = cargarProcesosDesdeArchivo(argv[1]);
+    } else {
+        procesos = cargarProcesosDesdeConsola();
+    }
+
+    Planificador sched(procesos);
+    sched.ejecutarRoundRobin();
+
     return 0;
 }
