@@ -2,3 +2,4 @@ INC AX
 INC AX
 NOP           
 INC AX      
+JMP 7
