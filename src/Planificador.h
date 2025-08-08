@@ -3,6 +3,8 @@
 
 #include "Proceso.h"
 #include <vector>
+#include <string>
+
 
 class Planificador {
 public:
@@ -12,6 +14,7 @@ public:
 private:
     std::vector<Proceso>& procesos_;
     void imprimirContextSwitch(const Proceso& anterior, const Proceso& siguiente);
+    void imprimirEstado(const Proceso& p, const std::string& instr);
     void ejecutarInstruccion(Proceso& p);
 };
 

@@ -10,23 +10,23 @@
  * @brief Estado del proceso en el planificador.
  */
 enum class Estado {
-    Listo,        ///< Proceso está listo para ejecutarse.
-    Ejecutando,   ///< Proceso actualmente en ejecución.
-    Terminado     ///< Proceso ha finalizado.
+    Listo,        
+    Ejecutando,   
+    Terminado     
 };
 
 /**
  * @brief Representación de un proceso en la simulación.
  */
 struct Proceso {
-    int pid;                         ///< Identificador único del proceso
-    int pc;                          ///< Contador de programa (índice de instrucción)
-    int ax;                          ///< Registro AX
-    int bx;                          ///< Registro BX
-    int cx;                          ///< Registro CX
-    int quantum;                     ///< Duración de tiempo asignada
-    Estado estado;                   ///< Estado actual del proceso
-    std::vector<std::string> instrucciones; ///< Memoria de instrucciones
+    int pid;                         
+    int pc;                          
+    int ax;                          
+    int bx;                         
+    int cx;                          
+    int quantum;                     
+    Estado estado;                   
+    std::vector<std::string> instrucciones; 
 
     /**
      * @brief Constructor que inicializa un proceso sin instrucciones.

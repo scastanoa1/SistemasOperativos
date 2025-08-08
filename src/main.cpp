@@ -1,19 +1,29 @@
 #include "CargaProcesos.h"
+#include "CargaInstrucciones.h"
 #include "Planificador.h"
 #include <iostream>
-#include <vector>
 
 int main(int argc, char* argv[]) {
-    std::vector<Proceso> procesos;
+    if (argc < 2) {
+        std::cerr << "Uso: " << argv[0] << " <procesos.txt> [<ruta_instrucciones>]\n";
+        return 1;
+    }
 
-    if (argc == 2) {
-        procesos = cargarProcesosDesdeArchivo(argv[1]);
-    } else {
-        procesos = cargarProcesosDesdeConsola();
+    std::string rutaProcesos    = argv[1];
+    std::string rutaInstrucciones = (argc >= 3 ? argv[2] : ".");
+
+    auto procesos = cargarProcesosDesdeArchivo(rutaProcesos);
+    if (procesos.empty()) {
+        std::cerr << "No se cargaron procesos.\n";
+        return 1;
+    }
+
+    for (auto& p : procesos) {
+        auto instr = cargarInstruccionesDesdeArchivo(p.pid, rutaInstrucciones);
+        p.setInstrucciones(instr);
     }
 
     Planificador sched(procesos);
     sched.ejecutarRoundRobin();
-
     return 0;
 }
