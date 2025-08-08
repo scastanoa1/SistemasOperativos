@@ -1,4 +1,4 @@
-INC BX
-INC BX
-ADD CX, BX
-NOP
+ADD AX, BX    
+ADD AX, BX
+NOP           
+JMP 4        

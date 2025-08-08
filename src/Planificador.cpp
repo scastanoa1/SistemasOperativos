@@ -5,13 +5,25 @@
 Planificador::Planificador(std::vector<Proceso>& procesos)
     : procesos_(procesos) {}
 
-void Planificador::imprimirContextSwitch(const Proceso& anterior, const Proceso& siguiente) {
-    std::cout << "Context switch: PID " << anterior.pid
-              << " -> PID " << siguiente.pid << "\n";
+void Planificador::imprimirContextSwitch(const Proceso& anterior,
+                                         const Proceso& siguiente) {
+    if (anterior.pid != 0) {
+        std::cout << "Guardando estado de Proceso " << anterior.pid
+                  << ": PC=" << anterior.pc
+                  << ", AX=" << anterior.ax
+                  << ", BX=" << anterior.bx
+                  << ", CX=" << anterior.cx << "\n";
+    }
+    std::cout << "Cargando estado de Proceso " << siguiente.pid
+              << ": PC=" << siguiente.pc
+              << ", AX=" << siguiente.ax
+              << ", BX=" << siguiente.bx
+              << ", CX=" << siguiente.cx << "\n";
 }
 
-void Planificador::imprimirEstado(const Proceso& p, const std::string& instr) {
-    std::cout << "  PID " << p.pid
+void Planificador::imprimirEstado(const Proceso& p,
+                                  const std::string& instr) {
+    std::cout << "PID " << p.pid
               << " ejecuta: " << instr
               << " | AX=" << p.ax
               << " BX=" << p.bx
@@ -26,8 +38,8 @@ void Planificador::ejecutarInstruccion(Proceso& p) {
         return;
     }
 
-    std::string linea = p.instrucciones[p.pc];
-    std::istringstream iss(linea);
+    const std::string instr = p.instrucciones[p.pc];
+    std::istringstream iss(instr);
     std::string opcode;
     iss >> opcode;
 
@@ -36,30 +48,45 @@ void Planificador::ejecutarInstruccion(Proceso& p) {
         if      (reg == "AX") ++p.ax;
         else if (reg == "BX") ++p.bx;
         else if (reg == "CX") ++p.cx;
+        ++p.pc;
 
-    } else if (opcode == "ADD" || opcode == "SUB") {
+    } else if (opcode == "JMP") {
+        int target; iss >> target;
+        if (0 <= target && target < static_cast<int>(p.instrucciones.size()))
+            p.pc = target;
+        else
+            p.estado = Estado::Terminado;
+
+    } else if (opcode == "ADD" || opcode == "SUB" || opcode == "MUL") {
         std::string dest, src;
-        iss >> dest; dest.pop_back();  
+        iss >> dest;
+        if (!dest.empty() && dest.back()==',') dest.pop_back();
         iss >> src;
-        int* pd = nullptr;
-        if      (dest == "AX") pd = &p.ax;
-        else if (dest == "BX") pd = &p.bx;
-        else if (dest == "CX") pd = &p.cx;
-        int val = (src=="AX"?p.ax: src=="BX"?p.bx: p.cx);
+
+        int* pd = (dest=="AX" ? &p.ax
+                 : dest=="BX" ? &p.bx
+                 : dest=="CX" ? &p.cx
+                 : nullptr);
+        int val = (src=="AX" ? p.ax
+                 : src=="BX" ? p.bx
+                 : src=="CX" ? p.cx
+                 : std::stoi(src));
         if (pd) {
-            if (opcode == "ADD") *pd += val;
-            else                 *pd -= val;
+            if      (opcode=="ADD") *pd += val;
+            else if (opcode=="SUB") *pd -= val;
+            else                    *pd *= val;
         }
+        ++p.pc;
 
     } else if (opcode == "NOP") {
+        ++p.pc;
 
     } else {
         p.estado = Estado::Terminado;
         return;
     }
 
-    ++p.pc;
-    imprimirEstado(p, linea); 
+    imprimirEstado(p, instr);
 }
 
 void Planificador::ejecutarRoundRobin() {
