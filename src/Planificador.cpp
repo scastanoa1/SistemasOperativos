@@ -1,4 +1,5 @@
 #include "Planificador.h"
+#include "Logger.h"
 #include <iostream>
 #include <sstream>
 
@@ -7,29 +8,39 @@ Planificador::Planificador(std::vector<Proceso>& procesos)
 
 void Planificador::imprimirContextSwitch(const Proceso& anterior,
                                          const Proceso& siguiente) {
+    std::ostringstream oss;
+    oss << "[Cambio de contexto]\n";
     if (anterior.pid != 0) {
-        std::cout << "Guardando estado de Proceso " << anterior.pid
-                  << ": PC=" << anterior.pc
-                  << ", AX=" << anterior.ax
-                  << ", BX=" << anterior.bx
-                  << ", CX=" << anterior.cx << "\n";
+        oss << "Guardando estado de Proceso " << anterior.pid
+            << ": PC=" << anterior.pc
+            << ", AX=" << anterior.ax
+            << ", BX=" << anterior.bx
+            << ", CX=" << anterior.cx
+            << "\n";
     }
-    std::cout << "Cargando estado de Proceso " << siguiente.pid
-              << ": PC=" << siguiente.pc
-              << ", AX=" << siguiente.ax
-              << ", BX=" << siguiente.bx
-              << ", CX=" << siguiente.cx << "\n";
+    oss << "Cargando estado de Proceso " << siguiente.pid
+        << ": PC=" << siguiente.pc
+        << ", AX=" << siguiente.ax
+        << ", BX=" << siguiente.bx
+        << ", CX=" << siguiente.cx
+        << "\n";
+    const std::string msg = oss.str();
+    std::cout << msg;
+    Logger::log(msg);
 }
 
-void Planificador::imprimirEstado(const Proceso& p,
-                                  const std::string& instr) {
-    std::cout << "PID " << p.pid
-              << " ejecuta: " << instr
-              << " | AX=" << p.ax
-              << " BX=" << p.bx
-              << " CX=" << p.cx
-              << " PC=" << p.pc
-              << "\n";
+void Planificador::imprimirEstado(const Proceso& p, const std::string& instr) {
+    std::ostringstream oss;
+    oss << "PID " << p.pid
+        << " ejecuta: " << instr
+        << " | AX=" << p.ax
+        << " BX=" << p.bx
+        << " CX=" << p.cx
+        << " PC=" << p.pc
+        << "\n";
+    const std::string msg = oss.str();
+    std::cout << msg;
+    Logger::log(msg);
 }
 
 void Planificador::ejecutarInstruccion(Proceso& p) {
@@ -52,29 +63,50 @@ void Planificador::ejecutarInstruccion(Proceso& p) {
 
     } else if (opcode == "JMP") {
         int target; iss >> target;
-        if (0 <= target && target < static_cast<int>(p.instrucciones.size()))
+        if (0 <= target && target < static_cast<int>(p.instrucciones.size())) {
             p.pc = target;
-        else
+        } else if (target == static_cast<int>(p.instrucciones.size())) {
             p.estado = Estado::Terminado;
+            return;
+        } else {
+            p.estado = Estado::Terminado;
+            p.exit_code = 1;
+            return;
+        }
 
     } else if (opcode == "ADD" || opcode == "SUB" || opcode == "MUL") {
         std::string dest, src;
         iss >> dest;
-        if (!dest.empty() && dest.back()==',') dest.pop_back();
+        if (!dest.empty() && dest.back() == ',') dest.pop_back();
         iss >> src;
 
-        int* pd = (dest=="AX" ? &p.ax
-                 : dest=="BX" ? &p.bx
-                 : dest=="CX" ? &p.cx
-                 : nullptr);
-        int val = (src=="AX" ? p.ax
-                 : src=="BX" ? p.bx
-                 : src=="CX" ? p.cx
-                 : std::stoi(src));
+        int* pd = nullptr;
+        if      (dest == "AX") pd = &p.ax;
+        else if (dest == "BX") pd = &p.bx;
+        else if (dest == "CX") pd = &p.cx;
+
+        int val = 0;
+        if      (src == "AX") val = p.ax;
+        else if (src == "BX") val = p.bx;
+        else if (src == "CX") val = p.cx;
+        else {
+            try {
+                val = std::stoi(src);
+            } catch (...) {
+                p.estado = Estado::Terminado;
+                p.exit_code = 1;
+                return;
+            }
+        }
+
         if (pd) {
-            if      (opcode=="ADD") *pd += val;
-            else if (opcode=="SUB") *pd -= val;
-            else                    *pd *= val;
+            if (opcode == "ADD") *pd += val;
+            else if (opcode == "SUB") *pd -= val;
+            else                      *pd *= val;
+        } else {
+            p.estado = Estado::Terminado;
+            p.exit_code = 1;
+            return;
         }
         ++p.pc;
 
@@ -83,6 +115,7 @@ void Planificador::ejecutarInstruccion(Proceso& p) {
 
     } else {
         p.estado = Estado::Terminado;
+        p.exit_code = 1;
         return;
     }
 
@@ -106,11 +139,15 @@ void Planificador::ejecutarRoundRobin() {
                 while (t-- > 0 && p.estado != Estado::Terminado) {
                     ejecutarInstruccion(p);
                 }
-                if (p.estado != Estado::Terminado)
+                if (p.estado != Estado::Terminado) {
                     p.estado = Estado::Listo;
+                }
                 anterior = &p;
             }
         }
     }
-    std::cout << "Todos los procesos han terminado.\n";
+
+    const std::string endMsg = "Todos los procesos han terminado.\n";
+    std::cout << endMsg;
+    Logger::log(endMsg);
 }

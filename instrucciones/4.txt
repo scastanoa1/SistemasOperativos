@@ -1,4 +1,4 @@
 MUL CX, AX    
 MUL CX, AX
 NOP           
-JMP 4        
+NOP

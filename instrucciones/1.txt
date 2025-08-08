@@ -1,4 +1,4 @@
 INC AX        
 INC AX
 NOP           
-JMP 4         
+INC AX      
